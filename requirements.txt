@@ -1,0 +1,10 @@
+googledrivedownloader==0.4
+networkx==2.6.1
+numpy==1.19.2
+ogb==1.3.1
+scikit_learn==1.1.3
+scipy==1.6.2
+torch==1.9.0
+torch_geometric==1.7.2
+torch_scatter==2.0.7
+torch_sparse==0.6.10
