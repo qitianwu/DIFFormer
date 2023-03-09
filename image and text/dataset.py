@@ -111,23 +111,23 @@ def load_20news(data_dir):
     from sklearn.datasets import fetch_20newsgroups
     from sklearn.feature_extraction.text import CountVectorizer
     from sklearn.feature_extraction.text import TfidfTransformer
-    categories = ['alt.atheism',
-                    'comp.sys.ibm.pc.hardware',
-                    'misc.forsale',
-                    'rec.autos',
-                    'rec.sport.hockey',
-                    'sci.crypt',
-                    'sci.electronics',
-                    'sci.med',
-                    'sci.space',
-                    'talk.politics.guns']
-    path = os.path.join(data_dir,'20news')
 
-    # if os.path.exists(os.path.join(path, '20news.pkl')):
-    #     data = pkl.load(open(os.path.join(path, '20news.pkl'), 'rb'))
-    # else:
-    data = fetch_20newsgroups(data_home=path, subset='all', categories=categories)
-    # pickle.dump(data, open(os.path.join(data_dir, '20news10.pkl'), 'wb'))
+    path = os.path.join(data_dir, '20news')
+
+    if os.path.exists(os.path.join(path, '20news.pkl')):
+        data = pkl.load(open(os.path.join(path, '20news.pkl'), 'rb'))
+    else:
+        categories = ['alt.atheism',
+                      'comp.sys.ibm.pc.hardware',
+                      'misc.forsale',
+                      'rec.autos',
+                      'rec.sport.hockey',
+                      'sci.crypt',
+                      'sci.electronics',
+                      'sci.med',
+                      'sci.space',
+                      'talk.politics.guns']
+        data = fetch_20newsgroups(data_home=path, subset='all', categories=categories)
 
     vectorizer = CountVectorizer(stop_words='english', min_df=0.05)
     X_counts = vectorizer.fit_transform(data.data).toarray()

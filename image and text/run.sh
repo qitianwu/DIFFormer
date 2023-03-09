@@ -54,3 +54,7 @@ do
         --lr 0.0005 --weight_decay 0.1 --dropout 0.0 --num_layers 2 --hidden_channels 300 --use_residual --use_bn  --alpha 0.5 --kernel sigmoid \
         --epochs 600 --seed 123 --device 2 --runs 5
 done
+
+python main.py --dataset 20news --method difformer --rand_split_class --label_num_per_class 100 --valid_num 1000 \
+        --lr 0.0005 --weight_decay 0.1 --dropout 0.0 --num_layers 2 --hidden_channels 300 --use_residual --use_bn  --alpha 0.5 --kernel simple \
+        --epochs 600 --seed 42 --device 2 --runs 5
