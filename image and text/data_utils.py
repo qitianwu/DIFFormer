@@ -8,7 +8,6 @@ from scipy import sparse as sp
 from sklearn.metrics import roc_auc_score, f1_score
 
 from torch_sparse import SparseTensor
-from google_drive_downloader import GoogleDriveDownloader as gdd
 
 def rand_train_test_idx(label, train_prop=.5, valid_prop=.25, ignore_negative=True):
     """ randomly splits label into train/valid/test splits """
@@ -36,29 +35,7 @@ def rand_train_test_idx(label, train_prop=.5, valid_prop=.25, ignore_negative=Tr
 
     return train_idx, valid_idx, test_idx
 
-def load_fixed_splits(data_dir, dataset, name, protocol):
-    splits_lst = []
-    if name in ['cora', 'citeseer', 'pubmed'] and protocol == 'semi':
-        splits = {}
-        splits['train'] = torch.as_tensor(dataset.train_idx)
-        splits['valid'] = torch.as_tensor(dataset.valid_idx)
-        splits['test'] = torch.as_tensor(dataset.test_idx)
-        splits_lst.append(splits)
-    elif name in ['cora', 'citeseer', 'pubmed', 'chameleon', 'squirrel', 'film', 'cornell', 'texas', 'wisconsin']:
-        for i in range(10):
-            splits_file_path = '{}/geom-gcn/splits/{}'.format(data_dir, name) + '_split_0.6_0.2_'+str(i)+'.npz'
-            splits = {}
-            with np.load(splits_file_path) as splits_file:
-                splits['train'] = torch.BoolTensor(splits_file['train_mask'])
-                splits['valid'] = torch.BoolTensor(splits_file['val_mask'])
-                splits['test'] = torch.BoolTensor(splits_file['test_mask'])
-            splits_lst.append(splits)
-    else:
-        raise NotImplementedError
-
-    return splits_lst
-
-def class_rand_splits(label, label_num_per_class, valid_num=500, test_num=1000):
+def class_rand_splits(label, label_num_per_class, valid_num=1000, test_num=None):
     train_idx, non_train_idx = [], []
     idx = torch.arange(label.shape[0])
     class_list = label.squeeze().unique()
@@ -72,9 +49,12 @@ def class_rand_splits(label, label_num_per_class, valid_num=500, test_num=1000):
     train_idx = torch.as_tensor(train_idx)
     non_train_idx = torch.as_tensor(non_train_idx)
     non_train_idx = non_train_idx[torch.randperm(non_train_idx.shape[0])]
+    if test_num is None:
+        test_num = non_train_idx.shape[0] - valid_num
     valid_idx, test_idx = non_train_idx[:valid_num], non_train_idx[valid_num:valid_num+test_num]
 
     return train_idx, valid_idx, test_idx
+
 
 def even_quantile_labels(vals, nclasses, verbose=True):
     """ partitions vals into nclasses by a quantile based split,
@@ -196,16 +176,6 @@ def gen_normalized_adjs(dataset):
     AD = adj * D_isqrt.view(1,-1) * D_isqrt.view(1,-1)
     return DAD, DA, AD
 
-def eval_f1(y_true, y_pred):
-    acc_list = []
-    y_true = y_true.detach().cpu().numpy()
-    y_pred = y_pred.argmax(dim=-1, keepdim=True).detach().cpu().numpy()
-
-    for i in range(y_true.shape[1]):
-        f1 = f1_score(y_true, y_pred, average='micro')
-        acc_list.append(f1)
-
-    return sum(acc_list)/len(acc_list)
 
 def eval_acc(y_true, y_pred):
     acc_list = []
@@ -258,55 +228,3 @@ def adj_mul(adj_i, adj, N):
     adj_j = torch.sparse.mm(adj_i_sp, adj_sp)
     adj_j = adj_j.coalesce().indices()
     return adj_j
-
-import subprocess
-def get_gpu_memory_map():
-    """Get the current gpu usage.
-    Returns
-    -------
-    usage: dict
-        Keys are device ids as integers.
-        Values are memory usage as integers in MB.
-    """
-    result = subprocess.check_output(
-        [
-            'nvidia-smi', '--query-gpu=memory.used',
-            '--format=csv,nounits,noheader'
-        ], encoding='utf-8')
-    # Convert lines into a dictionary
-    gpu_memory = np.array([int(x) for x in result.strip().split('\n')])
-    # gpu_memory_map = dict(zip(range(len(gpu_memory)), gpu_memory))
-    return gpu_memory
-
-import subprocess
-def get_gpu_memory_map():
-    """Get the current gpu usage.
-    Returns
-    -------
-    usage: dict
-        Keys are device ids as integers.
-        Values are memory usage as integers in MB.
-    """
-    result = subprocess.check_output(
-        [
-            'nvidia-smi', '--query-gpu=memory.used',
-            '--format=csv,nounits,noheader'
-        ], encoding='utf-8')
-    # Convert lines into a dictionary
-    gpu_memory = np.array([int(x) for x in result.strip().split('\n')])
-    # gpu_memory_map = dict(zip(range(len(gpu_memory)), gpu_memory))
-    return gpu_memory
-
-def count_parameters(model):
-    return sum(p.numel() for p in model.parameters() if p.requires_grad)
-
-dataset_drive_url = {
-    'snap-patents' : '1ldh23TSY1PwXia6dU0MYcpyEgX-w3Hia', 
-    'pokec' : '1dNs5E7BrWJbgcHeQ_zuy5Ozp2tRCWG0y', 
-    'yelp-chi': '1fAXtTVQS4CfEk4asqrFw9EPmlUPGbGtJ', 
-}
-
-splits_drive_url = {
-    'snap-patents' : '12xbBRqd8mtG_XkNLH8dRRNZJvVM4Pw-N', 
-    'pokec' : '1ZhpAiyTNc0cE_hhgyiqxnkKREHK7MK-_',
-}

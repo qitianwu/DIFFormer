@@ -8,10 +8,11 @@ import torch.nn.functional as F
 from torch_geometric.utils import to_undirected, remove_self_loops, add_self_loops, subgraph, k_hop_subgraph
 from torch_scatter import scatter
 
-from logger import Logger, SimpleLogger
+from logger import Logger
 from dataset import load_dataset
-from data_utils import normalize, gen_normalized_adjs, evaluate, evaluate_cpu, eval_acc, eval_rocauc, eval_f1, \
+from data_utils import normalize, gen_normalized_adjs, eval_acc, eval_rocauc, eval_f1, \
     to_sparse_tensor, load_fixed_splits, adj_mul
+from eval import evaluate_cpu
 from parse import parse_method, parser_add_main_args
 
 import warnings
@@ -140,7 +141,7 @@ for run in range(args.runs):
             loss.backward()
             optimizer.step()
 
-        if epoch % 9 == 0:
+        if epoch % args.eval_step == 0:
             result = evaluate_cpu(model, dataset, split_idx, eval_func, criterion, args, device)
             logger.add_result(run, result[:-1])
 

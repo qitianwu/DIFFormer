@@ -18,7 +18,6 @@ __pycache__/
 
 # Results
 #**/results/
-/GKDE & GPN/
 
 # SLURM script
 *.slurm

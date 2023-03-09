@@ -38,7 +38,7 @@ def parser_add_main_args(parser):
                         help='evaluation metric')
 
     # model
-    parser.add_argument('--method', type=str, default='gcn')
+    parser.add_argument('--method', type=str, default='difformer')
     parser.add_argument('--hidden_channels', type=int, default=32)
     parser.add_argument('--num_layers', type=int, default=2,
                         help='number of layers for deep methods')
@@ -61,6 +61,8 @@ def parser_add_main_args(parser):
     # display and utility
     parser.add_argument('--display_step', type=int,
                         default=1, help='how often to print')
+    parser.add_argument('--eval_step', type=int,
+                        default=1, help='how often to evaluate')
     parser.add_argument('--cached', action='store_true',
                         help='set to use faster sgc')
     parser.add_argument('--print_prop', action='store_true',

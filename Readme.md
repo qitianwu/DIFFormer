@@ -1,10 +1,12 @@
-# DIFFormer: Diffusion-based Scalable (Graph) Transformers
+# DIFFormer: Diffusion-based (Graph) Transformers
 
 The official implementation for ICLR23 paper "DIFFormer: Scalable (Graph) Transformers Induced by Energy Constrained Diffusion"
 
 ## What's news
 
-[2023.03.01] We release the early version of our codes for node classification (more info will be updated soon).
+[2023.03.01] We release the early version of our codes for node classification.
+
+[2023.03.09] We release codes for image/text classification and spatial-temporal prediction.
 
 ```bibtex
       @inproceedings{
@@ -18,12 +20,8 @@ The official implementation for ICLR23 paper "DIFFormer: Scalable (Graph) Transf
 
 ## Dependence
 
-- Ubuntu 16.04.6
-- Cuda 10.2
-- Pytorch 1.9.0
-- Pytorch Geometric 2.0.3
-
-More information about required packages is listed in `requirements.txt`.
+Our implementation is based on Pytorch and Pytorch Geometric.
+Please refer to `requirements.txt` in each folder for preparing the required packages.
 
 ## 
 
