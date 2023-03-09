@@ -20,7 +20,7 @@ import networkx as nx
 import scipy.sparse as sp
 
 from ogb.nodeproppred import NodePropPredDataset
-
+import os
 
 class NCDataset(object):
     def __init__(self, name):
@@ -270,7 +270,7 @@ def load_proteins_dataset(data_dir):
         return {'train': torch.as_tensor(split_idx['train']),
                 'valid': torch.as_tensor(split_idx['valid']),
                 'test': torch.as_tensor(split_idx['test'])}
-    dataset.get_idx_split = protein_orig_split
+    dataset.load_fixed_splits = protein_orig_split
     dataset.graph, dataset.label = ogb_dataset.graph, ogb_dataset.labels
 
     dataset.graph['edge_index'] = torch.as_tensor(dataset.graph['edge_index'])
@@ -297,7 +297,7 @@ def load_ogb_dataset(data_dir, name):
         tensor_split_idx = {key: torch.as_tensor(
             split_idx[key]) for key in split_idx}
         return tensor_split_idx
-    dataset.get_idx_split = ogb_idx_to_tensor  # ogb_dataset.get_idx_split
+    dataset.load_fixed_splits = ogb_idx_to_tensor  # ogb_dataset.get_idx_split
     dataset.label = torch.as_tensor(ogb_dataset.labels).reshape(-1, 1)
     return dataset
 
@@ -323,8 +323,24 @@ def load_pokec_mat(data_dir):
     label = fulldata['label'].flatten()
     dataset.label = torch.tensor(label, dtype=torch.long)
 
-    return dataset
+    def load_fixed_splits(train_prop=0.5, val_prop=0.25):
+        dir = f'{data_dir}pokec/split_0.5_0.25'
+        tensor_split_idx = {}
+        if os.path.exists(dir):
+            tensor_split_idx['train'] = torch.as_tensor(np.loadtxt(dir + '/pokec_train.txt'), dtype=torch.long)
+            tensor_split_idx['valid'] = torch.as_tensor(np.loadtxt(dir + '/pokec_valid.txt'), dtype=torch.long)
+            tensor_split_idx['test'] = torch.as_tensor(np.loadtxt(dir + '/pokec_test.txt'), dtype=torch.long)
+        else:
+            os.makedirs(dir)
+            tensor_split_idx['train'], tensor_split_idx['valid'], tensor_split_idx['test'] \
+                = rand_train_test_idx(dataset.label, train_prop=train_prop, valid_prop=val_prop)
+            np.savetxt(dir + '/pokec_train.txt', tensor_split_idx['train'], fmt='%d')
+            np.savetxt(dir + '/pokec_valid.txt', tensor_split_idx['valid'], fmt='%d')
+            np.savetxt(dir + '/pokec_test.txt', tensor_split_idx['test'], fmt='%d')
+        return tensor_split_idx
 
+    dataset.load_fixed_splits = load_fixed_splits
+    return dataset
 
 def load_snap_patents_mat(data_dir, nclass=5):
     if not path.exists(f'{data_dir}snap_patents.mat'):

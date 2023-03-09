@@ -46,18 +46,8 @@ if len(dataset.label.shape) == 1:
     dataset.label = dataset.label.unsqueeze(1)
 dataset.label = dataset.label.to(device)
 
-# get the splits for all runs
-if args.rand_split:
-    split_idx_lst = [dataset.get_idx_split(train_prop=args.train_prop, valid_prop=args.valid_prop)
-                     for _ in range(args.runs)]
-elif args.rand_split_class:
-    split_idx_lst = [dataset.get_idx_split(split_type='class', label_num_per_class=args.label_num_per_class)
-                     for _ in range(args.runs)]
-elif args.dataset in ['ogbn-proteins', 'ogbn-arxiv', 'ogbn-products']:
-    split_idx_lst = [dataset.get_idx_split()
-                     for _ in range(args.runs)]
-else:
-    split_idx_lst = load_fixed_splits(args.data_dir, dataset, name=args.dataset, protocol=args.protocol)
+# get fixed splits for testing
+split_idx = dataset.load_fixed_splits()
 
 ### Basic information of datasets ###
 n = dataset.graph['num_nodes']
@@ -91,8 +81,6 @@ elif args.metric == 'f1':
     eval_func = eval_f1
 else:
     eval_func = eval_acc
-
-split_idx = split_idx_lst[0]
 
 print("Load model checkpoint...")
 checkpoint_dir = f'../../model/{args.dataset}-difformer.pkl'

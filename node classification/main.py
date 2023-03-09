@@ -54,7 +54,7 @@ elif args.rand_split_class:
     split_idx_lst = [dataset.get_idx_split(split_type='class', label_num_per_class=args.label_num_per_class)
                      for _ in range(args.runs)]
 elif args.dataset in ['ogbn-proteins', 'ogbn-arxiv', 'ogbn-products']:
-    split_idx_lst = [dataset.get_idx_split()
+    split_idx_lst = [dataset.load_fixed_splits()
                      for _ in range(args.runs)]
 else:
     split_idx_lst = load_fixed_splits(args.data_dir, dataset, name=args.dataset, protocol=args.protocol)
