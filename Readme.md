@@ -1,6 +1,10 @@
 # DIFFormer: Diffusion-based (Graph) Transformers
 
-The official implementation for ICLR23 paper "DIFFormer: Scalable (Graph) Transformers Induced by Energy Constrained Diffusion"
+The official implementation for ICLR23 paper "DIFFormer: Scalable (Graph) Transformers Induced by Energy Constrained Diffusion".
+
+DIFFormer is a general-purpose encoder that can be used to compute instance representations with their latent/observed interactions accommodated.
+
+This work is built upon [NodeFormer](https://github.com/qitianwu/NodeFormer) (NeurIPS22) which is a scalable Transformer for large graphs with linear complexity. 
 
 ## What's news
 
@@ -8,15 +12,20 @@ The official implementation for ICLR23 paper "DIFFormer: Scalable (Graph) Transf
 
 [2023.03.09] We release codes for image/text classification and spatial-temporal prediction.
 
-```bibtex
-      @inproceedings{
-        wu2023difformer,
-        title={{DIFF}ormer: Scalable (Graph) Transformers Induced by Energy Constrained Diffusion},
-        author={Qitian Wu and Chenxiao Yang and Wentao Zhao and Yixuan He and David Wipf and Junchi Yan},
-        booktitle={International Conference on Learning Representations (ICLR)},
-        year={2023}
-        }
-```
+## Model Overview
+
+DIFFormer is motivated by an energy-constrained diffusion process which encodes a batch of instances to their structured representations. At each step, the model will first estimate pair-wise influence (i.e., attention) among arbitrary instance pairs (regardless of whether they connected by an input graph) and then update instance embeddings by feature propagation. The feed-forward process can be treated as a diffusion process that minimizes the global energy.
+
+<img width="700" alt="image" src="https://user-images.githubusercontent.com/22075007/232401434-e433a273-2083-4ac8-ad82-e9e15dd51d49.png">
+
+In specific, the DIFFormer's architecture is depicted by the following figure where one DIFFormer layer comprises of global attention, GCN convolution and residual link. The global attention is our key design including two instantiations: DIFFormer-s and DIFFormer-a.
+
+<img width="700" alt="image" src="https://files.mdnice.com/user/23982/0f71e990-acbc-4706-aca3-680628f8ac92.png">
+
+We implement the model in `difformer.py` where the DIFFormer-s (resp. DIFFormer-a) corresponds to `kernel = 'simple' (resp. 'sigmoid')`. The differences of two model versions lie in the global attention computation where DIFFormer-s only requires $O(N)$ complexity and DIFFormer-a requires $O(N^2)$, illustrated by the figure below where the red color marks the computation bottleneck. 
+
+<img width="700" alt="image" src="https://files.mdnice.com/user/23982/3c433a8d-faf4-45f7-a4bd-c599e3288077.png">
+
 
 ## Dependence
 
