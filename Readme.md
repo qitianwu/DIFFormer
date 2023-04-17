@@ -26,6 +26,25 @@ We implement the model in `difformer.py` where the DIFFormer-s (resp. DIFFormer-
 
 <img width="700" alt="image" src="https://files.mdnice.com/user/23982/3c433a8d-faf4-45f7-a4bd-c599e3288077.png">
 
+## Where DIFFormer can be used for?
+
+We focus on three different types of tasks in our experiments: graph-based node classification, image and text classification, and spatial-temporal prediction. Beyond these scenarios, DIFFormer can be used as a general-purpose encoder for various applications including but not limited to:
+
+- Encoding node features and graph structures: given node features $X$ and graph adjacency $A$, output node embeddings $Z$ or predictions $\hat Y$
+
+```python
+      model = DIFFormer(in_channels, hidden_channels, out_channels, use_graph=True)
+      z = DIFFormer(x, edge_index) # x: [N, D], edge_index: [2, E]
+```
+
+- Encoding instances (w/o graph structures): given instance features $X$ that are independent samples, output instance embeddings $Z$ or predictions $\hat Y$
+
+```python
+      model = DIFFormer(in_channels, hidden_channels, out_channels, use_graph=False)
+      z = DIFFormer(x, edge_index=None) # x: [N, D]
+```
+
+- As plug-in encoder backbone for computing representations in latent space under a large framework for various downstream tasks (generation, prediction, decision, etc.).
 
 ## Dependence
 
