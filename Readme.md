@@ -34,14 +34,14 @@ We focus on three different types of tasks in our experiments: graph-based node 
 
 ```python
       model = DIFFormer(in_channels, hidden_channels, out_channels, use_graph=True)
-      z = DIFFormer(x, edge_index) # x: [N, D], edge_index: [2, E]
+      z = model(x, edge_index) # x: [num_nodes, in_channels], edge_index: [2, E], z: [num_nodes, out_channels]
 ```
 
 - Encoding instances (w/o graph structures): given instance features $X$ that are independent samples, output instance embeddings $Z$ or predictions $\hat Y$
 
 ```python
       model = DIFFormer(in_channels, hidden_channels, out_channels, use_graph=False)
-      z = DIFFormer(x, edge_index=None) # x: [N, D]
+      z = model(x, edge_index=None) # x: [num_inst, in_channels], z: [num_inst, out_channels]
 ```
 
 - As plug-in encoder backbone for computing representations in latent space under a large framework for various downstream tasks (generation, prediction, decision, etc.).
