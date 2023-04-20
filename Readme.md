@@ -2,6 +2,8 @@
 
 The official implementation for ICLR23 paper "DIFFormer: Scalable (Graph) Transformers Induced by Energy Constrained Diffusion".
 
+Related material: [[Paper](https://arxiv.org/pdf/2301.09474.pdf)], [Blog [Chinese](https://zhuanlan.zhihu.com/p/622970740) | [English](https://medium.com/towards-data-science/how-to-build-graph-transformers-with-o-n-complexity-d507e103d30a)]
+
 DIFFormer is a general-purpose encoder that can be used to compute instance representations with their latent/observed interactions accommodated.
 
 This work is built upon [NodeFormer](https://github.com/qitianwu/NodeFormer) (NeurIPS22) which is a scalable Transformer for large graphs with linear complexity. 
