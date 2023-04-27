@@ -28,7 +28,7 @@ We implement the model in `difformer.py` where the DIFFormer-s (resp. DIFFormer-
 
 <img width="700" alt="image" src="https://files.mdnice.com/user/23982/3c433a8d-faf4-45f7-a4bd-c599e3288077.png">
 
-## Where DIFFormer can be used for?
+## Where DIFFormer can be used?
 
 We focus on three different types of tasks in our experiments: graph-based node classification, image and text classification, and spatial-temporal prediction. Beyond these scenarios, DIFFormer can be used as a general-purpose encoder for various applications including but not limited to:
 
