@@ -58,7 +58,9 @@ Please refer to `requirements.txt` in each folder for preparing the required pac
 We apply our model to three different tasks and consider different datasets.
 
 - For ***node classification*** and ***image/text classification***, we provide an easy access to the used datasets in the [Google drive](https://drive.google.com/drive/folders/1sWIlpeT_TaZstNB5MWrXgLmh522kx4XV?usp=sharing) 
-except two large graph datasets, OGBN-Proteins and Pokec, which can be automatically downloaded running the training/evaluation codes.
+except two large graph datasets, OGBN-Proteins and Pokec, which can be automatically downloaded running the training/evaluation codes. 
+
+*(for two image datasets CIFAR and STL, we use a self-supervised pretrained model (ResNet-18) to obtain the embeddings of images as input features)*
 
 - For ***spatial-temporal prediction***, the datasets can be automatically downloaded from Pytorch Geometric Temporal.
 
