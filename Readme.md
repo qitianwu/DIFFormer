@@ -88,7 +88,7 @@ If you find our codes useful, please consider citing our work
 ```bibtex
       @inproceedings{
         wu2023difformer,
-        title={{DIFF}ormer: Scalable (Graph) Transformers Induced by Energy Constrained Diffusion},
+        title={{DIFFormer: Scalable (Graph) Transformers Induced by Energy Constrained Diffusion},
         author={Qitian Wu and Chenxiao Yang and Wentao Zhao and Yixuan He and David Wipf and Junchi Yan},
         booktitle={International Conference on Learning Representations (ICLR)},
         year={2023}
