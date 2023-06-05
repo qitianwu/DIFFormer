@@ -40,7 +40,7 @@ def full_attention_conv(qs, ks, vs, kernel, output_attn=False):
 
         # compute attention for visualization if needed
         if output_attn:
-            attention = torch.einsum("nhm,lhm->nlh", qs, ks) / attention_normalizer.unsqueeze(2) # [N, L, H]
+            attention = torch.einsum("nhm,lhm->nlh", qs, ks) / attention_normalizer # [N, L, H]
 
     elif kernel == 'sigmoid':
         # numerator
