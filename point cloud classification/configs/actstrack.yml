@@ -1,0 +1,200 @@
+# data:
+  data_name: actstrack
+  data_dir: ../data
+  split:
+    train: 0.7
+    valid: 0.15
+    test: 0.15
+  im_thres: 2
+  sample_tracks: 10
+  pos_features:
+    - tx
+    - ty
+    - tz
+  other_features:
+    - tt
+    - tpx
+    - tpy
+    - tpz
+    - te
+    - deltapx
+    - deltapy
+    - deltapz
+    - deltae
+  feature_type: only_ones # only_pos or only_x or both_x_pos or only_ones
+
+# logging:
+#   tensorboard: false
+#   topk: [12, 24, 30]
+
+# optimizer:
+#   batch_size: 128
+#   wp_lr: 1.0e-3
+#   wp_wd: 1.0e-5
+#   attn_lr: 1.0e-3
+#   attn_wd: 1.0e-5
+#   emb_lr: 1.0e-3
+#   emb_wd: 1.0e-5
+
+# model:
+#   egnn:
+#     n_layers: 4
+#     hidden_size: 64
+#     dropout_p: 0.2
+#     norm_type: batch
+#     act_type: relu
+#     pool: add
+#   pointtrans:
+#     n_layers: 4
+#     hidden_size: 64
+#     dropout_p: 0.2
+#     norm_type: batch
+#     act_type: relu
+#     pool: add
+#   dgcnn:
+#     n_layers: 4
+#     hidden_size: 64
+#     dropout_p: 0.2
+#     norm_type: batch
+#     act_type: relu
+#     pool: add
+
+# lri_bern:
+#   dgcnn:
+#     epochs: 300
+#     warmup: 0
+#     final_r: 0.7
+#     info_loss_coef: 1.0
+#   pointtrans:
+#     epochs: 200
+#     warmup: 100
+#     final_r: 0.5
+#     info_loss_coef: 1.0
+#   egnn:
+#     epochs: 300
+#     warmup: 0
+#     final_r: 0.7
+#     info_loss_coef: 0.1
+
+#   # not tuned
+#   one_encoder: true
+#   attn_constraint: none
+#   temperature: 1.0
+#   decay_interval: 10
+#   decay_r: 0.1
+#   init_r: 0.9
+#   pred_loss_coef: 1.0
+#   pred_lr: 1.0e-3
+#   pred_wd: 1.0e-5
+#   dropout_p: 0.2
+#   norm_type: batch
+#   act_type: relu
+
+# lri_gaussian:
+#   dgcnn:
+#     epochs: 100
+#     warmup: 200
+#     pos_coef: 200.0
+#     info_loss_coef: 0.01
+#   pointtrans:
+#     epochs: 100
+#     warmup: 200
+#     pos_coef: 200.0
+#     info_loss_coef: 0.01
+#   egnn:
+#     epochs: 100
+#     warmup: 200
+#     pos_coef: 300.0
+#     info_loss_coef: 0.01
+
+#   # not tuned
+#   kr: 10
+#   one_encoder: true
+#   attn_constraint: none
+#   covar_dim: 3
+#   pred_loss_coef: 1.0
+#   pred_lr: 1.0e-3
+#   pred_wd: 1.0e-5
+#   dropout_p: 0.2
+#   norm_type: batch
+#   act_type: relu
+
+# gradcam:
+#   epochs: 1
+#   warmup: 300
+#   pred_lr: 0
+#   pred_wd: 0
+
+# gradgeo:
+#   epochs: 1
+#   warmup: 300
+#   gradgeo: true
+#   pred_lr: 0
+#   pred_wd: 0
+
+# bernmask_p:
+#   dgcnn:
+#     size_loss_coef: 0.01
+#     mask_ent_loss_coef: 0.1
+#   pointtrans:
+#     size_loss_coef: 0.01
+#     mask_ent_loss_coef: 1.0
+#   egnn:
+#     size_loss_coef: 0.01
+#     mask_ent_loss_coef: 0.1
+
+#   epochs: 100
+#   warmup: 300
+#   temp: [1.0, 1.0]
+#   pred_loss_coef: 1.0
+#   pred_lr: 0
+#   pred_wd: 0
+#   dropout_p: 0.2
+#   norm_type: batch
+#   act_type: relu
+
+# bernmask:
+#   dgcnn:
+#     size_loss_coef: 0.1
+#     mask_ent_loss_coef: 0.01
+#     iter_lr: 1.0e-1
+#   pointtrans:
+#     size_loss_coef: 0.1
+#     mask_ent_loss_coef: 0.01
+#     iter_lr: 1.0e-1
+#   egnn:
+#     size_loss_coef: 0.01
+#     mask_ent_loss_coef: 0.1
+#     iter_lr: 1.0e-1
+
+#   epochs: 1
+#   warmup: 300
+#   iter_per_sample: 500
+#   pred_loss_coef: 1.0
+#   pred_lr: 0
+#   pred_wd: 0
+#   dropout_p: 0.2
+#   norm_type: batch
+#   act_type: relu
+
+# pointmask:
+#   dgcnn:
+#     t: 0.2
+#     kl_loss_coef: 0.01
+#   pointtrans:
+#     t: 0.2
+#     kl_loss_coef: 1.0
+#   egnn:
+#     t: 0.2
+#     kl_loss_coef: 1.0
+
+#   epochs: 300
+#   warmup: 0
+#   one_encoder: false
+#   covar_dim: 2  # MLP output 2 dims for mu and sigma
+#   pred_loss_coef: 1.0
+#   pred_lr: 1.0e-3
+#   pred_wd: 1.0e-5
+#   dropout_p: 0.2
+#   norm_type: batch
+#   act_type: relu
