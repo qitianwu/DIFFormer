@@ -40,7 +40,7 @@ def parser_add_main_args(parser):
     # dataset and evaluation
     parser.add_argument('--dataset', type=str, default='cora')
     parser.add_argument('--sub_dataset', type=str, default='')
-    parser.add_argument('--data_dir', type=str, default='../../../Instruc/data/')
+    parser.add_argument('--data_dir', type=str, default='../../../NodeFormer/data/')
     parser.add_argument('--device', type=int, default=0,
                         help='which gpu to use if any (default: 0)')
     parser.add_argument('--seed', type=int, default=42)
@@ -48,7 +48,7 @@ def parser_add_main_args(parser):
     parser.add_argument('--epochs', type=int, default=500)
     parser.add_argument('--runs', type=int, default=1,
                         help='number of distinct runs')
-    parser.add_argument('--batch_size', type=int, default=128)
+    parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--directed', action='store_true',
                         help='set to not symmetrize adjacency')
     parser.add_argument('--train_prop', type=float, default=.5,

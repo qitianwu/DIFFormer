@@ -38,7 +38,7 @@ else:
 config_path=f'configs/{args.dataset}.yml'
 with open(config_path,'r') as f:
     config=yaml.safe_load(f)
-loaders, _, dataset=get_data_loaders(args.dataset,args.batch_size,config,args.seed)
+loaders, _, dataset=get_data_loaders(args.data_dir, args.dataset,args.batch_size,config,args.seed)
 
 train_loader, valid_loader, test_loader=loaders['train'], loaders['valid'], loaders['test']
 
@@ -85,6 +85,8 @@ for run in range(args.runs):
         test_res=eval_batch(model,test_loader,eval_func,device)
         result=[train_res,valid_res,test_res]
         logger.add_result(run, result)
+
+        print(1)
 
         if epoch % args.display_step == 0:
             print(f'Epoch: {epoch:02d}, '

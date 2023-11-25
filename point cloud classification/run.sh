@@ -13,10 +13,10 @@ done
 
 
 
-python main.py --dataset tau3mu --batch_size 128 --lr 0.01 \
+python main.py --dataset tau3mu --batch_size 2048 --lr 0.01 \
     --method difformer --num_layers 2 --hidden_channels 64 --dropout 0.4 --weight_decay 5e-5 \
-    --graph_pooling mean --kernel simple2 --use_bn --use_residual --use_graph --use_weight \
-    --device 2 --runs 2 --epochs 101
+    --graph_pooling mean --kernel simple --use_bn --use_residual --use_graph --use_weight \
+    --device 2 --runs 2 --epochs 100
 
 dropout_list=(0.3 0.4 0.5)
 decay_list=(5e-5 1e-4 5e-4 1e-3)
@@ -64,9 +64,9 @@ done
 done
 done
 
-python main.py --dataset synmol --batch_size 128 --lr 0.005 \
+python main.py --dataset synmol --batch_size 2048 --lr 0.005 \
     --method difformer --num_layers 2 --hidden_channels 64 --dropout 0.4 --weight_decay 1e-4 \
-    --graph_pooling mean --kernel simple2 --use_bn --use_residual --use_graph --use_weight \
+    --graph_pooling mean --kernel simple --use_bn --use_residual --use_graph --use_weight \
     --device 1 --runs 2 --epochs 101
 
 dropout_list=(0.3 0.4 0.5)

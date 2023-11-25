@@ -44,7 +44,7 @@ def load_fixed_splits(data_dir, dataset, name, protocol):
         splits['valid'] = torch.as_tensor(dataset.valid_idx)
         splits['test'] = torch.as_tensor(dataset.test_idx)
         splits_lst.append(splits)
-    elif name in ['cora', 'citeseer', 'pubmed', 'chameleon', 'squirrel', 'film', 'cornell', 'texas', 'wisconsin']:
+    elif name in ['cora', 'citeseer', 'pubmed', 'film', 'cornell', 'texas', 'wisconsin']:
         for i in range(10):
             splits_file_path = '{}/geom-gcn/splits/{}'.format(data_dir, name) + '_split_0.6_0.2_'+str(i)+'.npz'
             splits = {}
@@ -52,6 +52,36 @@ def load_fixed_splits(data_dir, dataset, name, protocol):
                 splits['train'] = torch.BoolTensor(splits_file['train_mask'])
                 splits['valid'] = torch.BoolTensor(splits_file['val_mask'])
                 splits['test'] = torch.BoolTensor(splits_file['test_mask'])
+            splits_lst.append(splits)
+    elif name in ['chameleon', 'squirrel']:
+        file_path = os.path.join(data_dir, f'heterophilous_graph/{name}_filtered.npz')
+        data = np.load(file_path)
+        train_masks = data['train_masks']  # (10, N), 10 splits
+        val_masks = data['val_masks']
+        test_masks = data['test_masks']
+        N = train_masks.shape[1]
+
+        node_idx = np.arange(N)
+        for i in range(10):
+            splits = {}
+            splits['train'] = torch.as_tensor(node_idx[train_masks[i]])
+            splits['valid'] = torch.as_tensor(node_idx[val_masks[i]])
+            splits['test'] = torch.as_tensor(node_idx[test_masks[i]])
+            splits_lst.append(splits)
+    elif name in ['roman-empire', 'amazon-ratings', 'minesweeper', 'tolokers', 'questions']:
+        file_name = f'{name.replace("-", "_")}.npz'
+        path = os.path.join(data_dir, f'heterophilous/{file_name}')
+        data = np.load(path)
+
+        train_masks = torch.tensor(data['train_masks'])
+        val_masks = torch.tensor(data['val_masks'])
+        test_masks = torch.tensor(data['test_masks'])
+
+        for i in range(10):
+            splits = {}
+            splits['train'] = torch.where(train_masks[i])[0]
+            splits['valid'] = torch.where(val_masks[i])[0]
+            splits['test'] = torch.where(test_masks[i])[0]
             splits_lst.append(splits)
     else:
         raise NotImplementedError

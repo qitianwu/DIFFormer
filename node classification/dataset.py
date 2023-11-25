@@ -119,8 +119,12 @@ def load_dataset(data_dir, dataname, sub_dataname=''):
         dataset = load_amazon_dataset(data_dir, dataname)
     elif dataname in  ('coauthor-cs', 'coauthor-physics'):
         dataset = load_coauthor_dataset(data_dir, dataname)
-    elif dataname in ('chameleon', 'cornell', 'film', 'squirrel', 'texas', 'wisconsin'):
+    elif dataname in ('cornell', 'film', 'texas', 'wisconsin'):
         dataset = load_geom_gcn_dataset(data_dir, dataname)
+    elif dataname in ('chameleon', 'squirrel'): # using new splits filtering the overlap nodes
+        dataset = load_wiki_new(data_dir, dataname)
+    elif dataname in ['roman-empire', 'amazon-ratings', 'minesweeper', 'tolokers', 'questions']:
+        dataset = load_heterophilous_graph(data_dir, dataname)
     else:
         raise ValueError('Invalid dataname')
     return dataset
@@ -553,7 +557,7 @@ def load_geom_gcn_dataset(data_dir, name):
 
 
 def load_wiki_new(data_dir, name, no_feat_norm=False):
-    path=os.path.join(data_dir, f'wiki_new/{name}/{name}_filtered.npz')
+    path=os.path.join(data_dir, f'heterophilous_graph/{name}_filtered.npz')
     data=np.load(path)
     node_feat=data['node_features'] # unnormalized
     labels=data['node_labels']
@@ -579,7 +583,7 @@ def load_wiki_new(data_dir, name, no_feat_norm=False):
 
 def load_heterophilous_graph(data_dir, name):
     file_name=f'{name.replace("-", "_")}.npz'
-    path=os.path.join(data_dir, f'heterophilous/{file_name}')
+    path=os.path.join(data_dir, f'heterophilous_graph/{file_name}')
     data=np.load(path)
 
     node_feat = torch.tensor(data['node_features'])

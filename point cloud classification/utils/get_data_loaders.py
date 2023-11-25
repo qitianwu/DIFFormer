@@ -4,8 +4,8 @@ from torch_geometric.loader import DataLoader
 from datasets import ActsTrack, PLBind, Tau3Mu, SynMol
 
 
-def get_data_loaders(dataset_name, batch_size, data_config, seed):
-    data_dir = '../../data/cloud_point'
+def get_data_loaders(data_dir, dataset_name, batch_size, data_config, seed):
+    data_dir = os.path.join(data_dir,'point_cloud')
     assert dataset_name in ['tau3mu', 'plbind', 'synmol'] or 'acts' in dataset_name
 
     if 'actstrack' in dataset_name:

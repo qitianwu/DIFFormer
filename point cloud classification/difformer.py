@@ -3,73 +3,60 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch_geometric.utils import degree
+from torch_sparse import SparseTensor, matmul
 
-def to_block(input, n_nodes):
-    '''
-    input: (N, n_col), n_nodes: (B)
-    '''
-    feat_list=[]
-    cnt=0
-    for n in n_nodes:
-        feat_list.append(input[cnt:cnt+n])
-        cnt+=n
-    blocks=torch.block_diag(*feat_list)
+def make_batch_mask(n_nodes, device='cpu'):
+    max_node = n_nodes.max().item()
+    mask = torch.zeros(len(n_nodes), max_node)
+    for idx, nx in enumerate(n_nodes):
+        mask[idx, :nx] = 1
+    return mask.bool().to(device), max_node
 
-    return blocks # (N, n_col*B)
-    
-def unpack_block(input, n_col, n_nodes):
-    '''
-    input: (N, B*n_col), n_col: int, n_nodes: (B)
-    '''
-    feat_list=[]
-    cnt=0
-    start_col=0
-    for n in n_nodes:
-        feat_list.append(input[cnt:cnt+n,start_col:start_col+n_col])
-        cnt+=n
-        start_col+=n_col
-    
-    return torch.cat(feat_list,dim=0) # (N, n_col)
 
-def batch_repeat(input, n_col, n_nodes):
-    '''
-    input: (B*n_col), n_col: int, n_nodes: (B)
-    '''
-    x_list=[]
-    cnt=0
-    for n in n_nodes:
-        x=input[cnt:cnt+n_col].repeat((n,1)) # (n, n_col)
-        x_list.append(x)
-        cnt+=n_col
-    
-    return torch.cat(x_list,dim=0)    
+def make_batch(n_nodes, device='cpu'):
+    x = []
+    for idx, ns in enumerate(n_nodes):
+        x.extend([idx] * ns)
+    return torch.LongTensor(x).to(device)
+
+
+def to_pad(feat, mask, max_node, batch_size):
+    n_heads, model_dim = feat.shape[-2:]
+    feat_shape = (batch_size, max_node, n_heads, model_dim)
+    new_feat = torch.zeros(feat_shape).to(feat)
+    new_feat[mask] = feat
+    return new_feat
 
 def gcn_conv(x, edge_index, edge_weight):
+    N, H = x.shape[0], x.shape[1]
+    row, col = edge_index
+    d = degree(col, N).float()
+    d_norm_in = (1. / d[col]).sqrt()
+    d_norm_out = (1. / d[row]).sqrt()
+    gcn_conv_output = []
     if edge_weight is None:
-        N=x.shape[0]
-        row, col = edge_index
-        d = degree(col, N).float()
-        d_norm_in = (1. / d[col]).sqrt()
-        d_norm_out = (1. / d[row]).sqrt()
-        value=torch.ones_like(row) * d_norm_in * d_norm_out
+        value = torch.ones_like(row) * d_norm_in * d_norm_out
     else:
-        value=edge_weight
-    value = torch. nan_to_num(value, nan=0.0, posinf=0.0, neginf=0.0)
-    adj=torch.sparse_coo_tensor(edge_index,value,size=(N,N))
-    # adj = SparseTensor(row=col, col=row, value=value, sparse_sizes=(N, N))
-    return torch.sparse.mm(adj, x)
+        value = edge_weight * d_norm_in * d_norm_out
+    value = torch.nan_to_num(value, nan=0.0, posinf=0.0, neginf=0.0)
+    adj = SparseTensor(row=col, col=row, value=value, sparse_sizes=(N, N))
+    for i in range(x.shape[1]):
+        gcn_conv_output.append( matmul(adj, x[:, i]) )  # [N, D]
+    gcn_conv_output = torch.stack(gcn_conv_output, dim=1) # [N, H, D]
+    return gcn_conv_output
 
 class TransConv(nn.Module):
-    def __init__(self,in_channels,out_channels,kernel='simple',use_graph=True,use_weight=True,graph_weight=-1):
+    def __init__(self,in_channels,out_channels,num_heads=1,kernel='simple',use_graph=True,use_weight=True,graph_weight=-1):
         '''
         in_channels should equal to out_channels when use_weight is False
         '''
         super().__init__()
-        self.Wk = nn.Linear(in_channels, out_channels)
-        self.Wq = nn.Linear(in_channels, out_channels)
+        self.Wk = nn.Linear(in_channels, out_channels*num_heads)
+        self.Wq = nn.Linear(in_channels, out_channels*num_heads)
         if use_weight:
-            self.Wv = nn.Linear(in_channels, out_channels)
+            self.Wv = nn.Linear(in_channels, out_channels*num_heads)
         self.out_channels = out_channels
+        self.num_heads = num_heads
         self.kernel = kernel
         self.use_graph = use_graph
         self.use_weight = use_weight
@@ -83,93 +70,83 @@ class TransConv(nn.Module):
 
     def full_attention(self, qs, ks, vs, kernel, n_nodes):
         '''
-        
+        qs: query tensor [N, H, D]
+        ks: key tensor [N, H, D]
+        vs: value tensor [N, H, D]
+        n_nodes: num of nodes per graph [B]
+
+        return output [N, H, D]
         '''
         if kernel=='simple':
             # normalize input
-            qs = qs / torch.norm(qs, p=2) # (N, D)
-            ks = ks / torch.norm(ks, p=2) # (N, D)
+            qs = qs / torch.norm(qs, p=2) # (N, H, D)
+            ks = ks / torch.norm(ks, p=2) # (N, H, D)
+
+            device = qs.device
+            node_mask, max_node = make_batch_mask(n_nodes, device)
+            batch_size, batch = len(n_nodes), make_batch(n_nodes, device)
+
+            q_pad = to_pad(qs, node_mask, max_node, batch_size)  # [B, M, H, D]
+            k_pad = to_pad(ks, node_mask, max_node, batch_size)  # [B, M, H, D]
+            v_pad = to_pad(vs, node_mask, max_node, batch_size)  # [B, M, H, D]
+
+            kv_pad = torch.einsum('abcd,abce->adce', k_pad, v_pad) # [B, D, H, D]
+
+            (n_heads, v_dim), k_dim = vs.shape[-2:], ks.shape[-1]
+            v_sum = torch.zeros((batch_size, n_heads, v_dim)).to(device)
+            v_idx = batch.reshape(-1, 1, 1).repeat(1, n_heads, v_dim)
+            v_sum.scatter_add_(dim=0, index=v_idx, src=vs)  # [B, H, D]
+
+            numerator = torch.einsum('abcd,adce->abce', q_pad, kv_pad)
+            numerator = numerator[node_mask] + v_sum[batch]
+
+            k_sum = torch.zeros((batch_size, n_heads, k_dim)).to(device)
+            k_idx = batch.reshape(-1, 1, 1).repeat(1, n_heads, k_dim)
+            k_sum.scatter_add_(dim=0, index=k_idx, src=ks)  # [B, H, D]
+            denominator = torch.einsum('abcd,acd->abc', q_pad, k_sum)
+            denominator = denominator[node_mask] + torch.index_select(
+                n_nodes.float(), dim=0, index=batch
+            ).unsqueeze(dim=-1)
+
+            attn_output = numerator / denominator.unsqueeze(dim=-1)  # [N, H, D]
+
+        elif kernel=='sigmoid': # equivalent to but faster than simple
+
+            device = qs.device
+            node_mask, max_node = make_batch_mask(n_nodes, device)
+            batch_size, batch = len(n_nodes), make_batch(n_nodes, device)
+
+            q_pad = to_pad(qs, node_mask, max_node, batch_size)  # [B, M, H, D]
+            k_pad = to_pad(ks, node_mask, max_node, batch_size)  # [B, M, H, D]
+            v_pad = to_pad(vs, node_mask, max_node, batch_size)  # [B, M, H, D]
 
             # numerator
-            q_block=to_block(qs,n_nodes) # (N, B*D)
-            k_block_T=to_block(ks,n_nodes).T # (B*D, N)
-            v_block=to_block(vs,n_nodes) # (N, B*D)
-            kv_block=torch.matmul(k_block_T,v_block) # (B*M, B*D)
-            qkv_block=torch.matmul(q_block,kv_block) # (N, B*D)
-            qkv=unpack_block(qkv_block,self.out_channels,n_nodes) # (N, D)
-
-            v_sum=v_block.sum(dim=0) # (B*D,)
-            v_sum=batch_repeat(v_sum,self.out_channels,n_nodes) # (N, D)
-            numerator=qkv+v_sum # (N, D)
+            numerator = torch.sigmoid(torch.einsum("abcd,ebcd->aebc", q_pad, k_pad))  # [B, B, M, H]
 
             # denominator
-            one_list=[]
-            for n in n_nodes:
-                one=torch.ones((n,1))
-                one_list.append(one)
-            one_block=torch.block_diag(*one_list).to(qs.device)
-            k_sum_block=torch.matmul(k_block_T,one_block) # (B*D, B)
-            denom_block=torch.matmul(q_block,k_sum_block) # (N, B)
-            denominator=unpack_block(denom_block,1,n_nodes) # (N, 1)
-            denominator+=batch_repeat(n_nodes,1,n_nodes) # (N, 1)
+            all_ones = torch.ones([ks.shape[0]]).to(ks.device)
+            denominator = torch.einsum("aebc,e->abc", numerator, all_ones) # [B, M, H]
+            denominator = denominator.unsqueeze(1).repeat(1, ks.shape[0], 1)  # [B, B, M, H]
 
-            attention=numerator/denominator # (N, D)
-        
-        elif kernel=='simple2': # equivalent to but faster than simple
-            start_row=0
-            qs = qs / torch.norm(qs, p=2) # (N, D)
-            ks = ks / torch.norm(ks, p=2) # (N, D)
-            attn_list=[]
-            for n in n_nodes:
-                cur_q=qs[start_row:start_row+n]
-                cur_k_T=ks[start_row:start_row+n].T
-                cur_v=vs[start_row:start_row+n]
+            # compute attention and attentive aggregated results
+            attention = numerator / denominator # [B, B, M, H]
+            attn_output = torch.einsum("aebc,ebcd->abcd", attention, v_pad)  # [B, M, H, D]
+            attn_output = attn_output[node_mask]
 
-                kv=torch.matmul(cur_k_T, cur_v)
-                qkv=torch.matmul(cur_q, kv)
-                numerator=qkv+torch.sum(cur_v,dim=0,keepdim=True)
-
-                k_sum=cur_k_T.sum(dim=-1,keepdim=True)
-                denominator=torch.matmul(cur_q,k_sum)
-                denominator+=n
-
-                cur_attn=numerator/denominator
-                attn_list.append(cur_attn)
-
-                start_row+=n
-            attention=torch.cat(attn_list,dim=0)
-        elif kernel=='sigmoid': # equivalent to but faster than simple
-            start_row=0
-            attn_list=[]
-
-            for n in n_nodes:
-                cur_q=qs[start_row:start_row+n]
-                cur_k_T=ks[start_row:start_row+n].T
-                cur_v=vs[start_row:start_row+n]
-
-                sig_qk=torch.sigmoid(torch.matmul(cur_q,cur_k_T))
-                numerator=torch.matmul(sig_qk,cur_v)
-                denominator=torch.sum(sig_qk,dim=-1,keepdim=True)
-
-                cur_attn=numerator/denominator
-                attn_list.append(cur_attn)
-
-                start_row+=n
-            attention=torch.cat(attn_list,dim=0)
         else:
             raise ValueError
         
-        return attention
+        return attn_output
 
     def forward(self, query_input, source_input, n_nodes, edge_index=None, edge_weight=None):
         '''
         n_nodes: (B,) B is batch_size, it indicates the number of nodes in each graph.
         in_channels should equal to out_channels when use_weight is False
         '''
-        query = self.Wq(query_input)
-        key = self.Wk(source_input)
+        query = self.Wq(query_input).reshape(-1, self.num_heads, self.out_channels)
+        key = self.Wk(source_input).reshape(-1, self.num_heads, self.out_channels)
         if self.use_weight:
-            value = self.Wv(source_input)
+            value = self.Wv(source_input).reshape(-1, self.num_heads, self.out_channels)
 
         attention_output=self.full_attention(query,key,value,self.kernel,n_nodes)
 
@@ -180,7 +157,8 @@ class TransConv(nn.Module):
                 final_output = attention_output + gcn_conv(value, edge_index, edge_weight)
         else:
             final_output=attention_output
-        
+        final_output = final_output.mean(dim=1)
+
         return final_output
     
 class Difformer(nn.Module):
@@ -215,9 +193,9 @@ class Difformer(nn.Module):
             fc.reset_parameters()
     
     def forward(self, data):
-        x=data.x
-        edge_index=data.edge_index
-        n_nodes=data.n_nodes
+        x = data.x
+        edge_index = data.edge_index
+        n_nodes = data.n_nodes
         layer_ = []
 
         # input MLP layer
