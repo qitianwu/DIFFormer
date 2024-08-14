@@ -40,7 +40,7 @@ def parser_add_main_args(parser):
     # dataset and evaluation
     parser.add_argument('--dataset', type=str, default='cora')
     parser.add_argument('--sub_dataset', type=str, default='')
-    parser.add_argument('--data_dir', type=str, default='../../../NodeFormer/data/')
+    parser.add_argument('--data_dir', type=str, default='/mnt/nas/home/wuqitian/NodeFormer/data/')
     parser.add_argument('--device', type=int, default=0,
                         help='which gpu to use if any (default: 0)')
     parser.add_argument('--seed', type=int, default=42)
@@ -63,7 +63,7 @@ def parser_add_main_args(parser):
     parser.add_argument('--label_num_per_class', type=int, default=20, help='labeled nodes per class(randomly selected)')
     parser.add_argument('--valid_num', type=int, default=200, help='Total number of validation')
     parser.add_argument('--test_num', type=int, default=500, help='Total number of test')
-    parser.add_argument('--metric', type=str, default='acc', choices=['acc', 'rocauc', 'f1'],
+    parser.add_argument('--metric', type=str, default='rocauc', choices=['acc', 'rocauc', 'f1'],
                         help='evaluation metric')
 
     # model

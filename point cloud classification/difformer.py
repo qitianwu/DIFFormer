@@ -124,9 +124,10 @@ class TransConv(nn.Module):
             numerator = torch.sigmoid(torch.einsum("abcd,ebcd->aebc", q_pad, k_pad))  # [B, B, M, H]
 
             # denominator
-            all_ones = torch.ones([ks.shape[0]]).to(ks.device)
-            denominator = torch.einsum("aebc,e->abc", numerator, all_ones) # [B, M, H]
-            denominator = denominator.unsqueeze(1).repeat(1, ks.shape[0], 1)  # [B, B, M, H]
+            all_ones = torch.ones([numerator.shape[1]]).to(ks.device)  #changed
+            epsilon = 1e-9  # a small value to avoid dividing 0
+            denominator = torch.einsum("aebc,e->abc", numerator, all_ones) + epsilon  # [B, M, H]
+            denominator = denominator.unsqueeze(1).repeat(1, numerator.shape[1], 1, 1)  # [B, B, M, H]
 
             # compute attention and attentive aggregated results
             attention = numerator / denominator # [B, B, M, H]

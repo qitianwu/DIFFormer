@@ -14,7 +14,7 @@ import torch.nn.functional as F
 
 from parse import parser_add_main_args, parse_method
 from models import GraphGNN
-from eval import eval_rocauc, eval_batch
+from eval import eval_recall, eval_rocauc, eval_f1, eval_accuracy, eval_batch
 from logger import Logger
 
 def fix_seed(seed):
@@ -50,11 +50,23 @@ c=1 # all are binary classification
 print(f'# features: {d}, # classes: {c}')
 
 
-gnn_node=parse_method(args,c,d,device)
+gnn_node = parse_method(args,c,d,device)
 model=GraphGNN(args.hidden_channels,c,gnn_node,args.graph_pooling).to(device)
 
 criterion = nn.BCEWithLogitsLoss()
-eval_func=eval_rocauc
+
+## Performance metric (Acc, AUC, F1) ###
+if args.metric == 'rocauc':
+    eval_func = eval_rocauc
+elif args.metric == 'f1':
+    eval_func = eval_f1
+elif args.metric == 'recall':
+    eval_func = eval_recall
+elif args.metric == 'acc':
+    eval_func = eval_accuracy
+else:
+    raise MetricError
+# eval_func=eval_rocauc
 
 logger = Logger(args.runs, args)
 model.train()
@@ -86,7 +98,7 @@ for run in range(args.runs):
         result=[train_res,valid_res,test_res]
         logger.add_result(run, result)
 
-        print(1)
+        # print(1)
 
         if epoch % args.display_step == 0:
             print(f'Epoch: {epoch:02d}, '
@@ -108,7 +120,7 @@ def make_print(method):
     if method=='gcn':
         print_str+=f'method: {args.method} layers: {args.num_layers} hidden: {args.hidden_channels} lr: {args.lr} dropout: {args.dropout} decay: {args.weight_decay}\n'
     elif method=='difformer':
-        print_str+=f'method: {args.method} hidden: {args.hidden_channels} layers: {args.num_layers} lr: {args.lr} decay: {args.weight_decay} dropout: {args.dropout} epochs: {args.epochs} kernel: {args.kernel} use_graph: {args.use_graph} graph_weight: {args.graph_weight} alpha: {args.alpha}\n'
+        print_str+=f'method: {args.method} hidden: {args.hidden_channels} layers: {args.num_layers} lr: {args.lr} decay: {args.weight_decay} dropout: {args.dropout} epochs: {args.epochs} kernel: {args.kernel} use_graph: {args.use_graph} graph_weight: {args.graph_weight} alpha: {args.alpha} metric: {args.metric}\n'
     elif method=='gat':
         print_str+=f'method: {args.method} hidden: {args.hidden_channels} lr: {args.lr} dropout: {args.dropout} decay: {args.weight_decay} heads: {args.gat_heads} layers: {args.num_layers}\n'
     elif method=='mlp':

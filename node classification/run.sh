@@ -44,7 +44,6 @@ python main-batch.py --dataset pokec --method difformer --rand_split --metric ac
 --batch_size 100000 --runs 5 --epochs 500 --seed 123 --eval_step 9 --device 3
 
 
-
 #### heterophilic graph datasets ####
 
 python main.py --dataset film --method difformer \
