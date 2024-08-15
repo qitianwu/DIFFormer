@@ -18,7 +18,7 @@ This work is built upon [NodeFormer](https://github.com/qitianwu/NodeFormer) (Ne
 
 [2024.08.15] We add codes for heterophily graphs (chameleon, squirrel and actor). See the training script in `./node classification/run.sh`. 
 
-[2024.08.15] We extend the implementation for accommodating a batch of graphs as input, and add codes for particle physics datasets in `./physical particle`.
+[2024.08.15] We extend the implementation for accommodating a batch of graphs as input, and add codes for particle physics datasets in `./physical particle`. See the [guideline](https://github.com/qitianwu/DIFFormer/tree/extension?tab=readme-ov-file#where-difformer-can-be-used).
 
 ## Model Overview
 
@@ -54,7 +54,7 @@ Beyond these scenarios, DIFFormer can be used as a general-purpose encoder for v
 ```
 
 - 3): **Encoding a batch of graphs (graphs can be disconnected with each other)**: given a batch of graphs, where their node features and graph adjacency are stacked as one big node feature matrix $\overline X$ and one big adjacency matrix $\overline A$ (diagonal block), 
-the model outputs the embeddings $\overline Z$ or predictions $\overline Y$ for nodes in all graphs within the batch. Please refer to codes in `./physical particle` for how to use it.
+the model outputs the embeddings $\overline Z$ for nodes in all graphs within the batch. Please refer to codes in `./physical particle` for how to use it.
 
 ```python
     model = DIFFormer_v2(in_channels, hidden_channels, out_channels, use_graph=True)
