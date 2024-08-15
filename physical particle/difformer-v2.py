@@ -162,7 +162,7 @@ class TransConv(nn.Module):
 
         return final_output
     
-class Difformer(nn.Module):
+class DIFFormer_v2(nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels, num_layers=2, kernel='simple', 
                  alpha=0.5, dropout=0.5, use_bn=True, use_residual=True, use_weight=True, use_graph=True, graph_weight=-1):
         super().__init__()
@@ -193,10 +193,7 @@ class Difformer(nn.Module):
         for fc in self.fcs:
             fc.reset_parameters()
     
-    def forward(self, data):
-        x = data.x
-        edge_index = data.edge_index
-        n_nodes = data.n_nodes
+    def forward(self, x, edge_index, n_nodes):
         layer_ = []
 
         # input MLP layer

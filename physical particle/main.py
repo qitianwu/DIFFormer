@@ -82,7 +82,7 @@ for run in range(args.runs):
         
         for batch in train_loader:
             batch=batch.to(device)
-            out=model(batch)
+            out=model(batch.x, batch.edge_index, batch.n_nodes)
             if len(batch.y.shape)==1:
                 batch.y=batch.y.unsqueeze(1)
             loss=criterion(out,batch.y.to(torch.float)) # to float?

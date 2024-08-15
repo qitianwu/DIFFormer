@@ -1,6 +1,6 @@
 
 from models import *
-from difformer import Difformer
+from difformer import DIFFormer_v2
 
 def parse_method(args,c,d,device):
     if args.method=='gcn':
@@ -18,7 +18,7 @@ def parse_method(args,c,d,device):
         model = GAT(d, args.hidden_channels, args.hidden_channels, num_layers=args.num_layers,
                     dropout=args.dropout, use_bn=args.use_bn, heads=args.gat_heads, out_heads=args.out_heads).to(device)
     elif args.method=='difformer':
-        model=Difformer(in_channels=d,
+        model=DIFFormer_v2(in_channels=d,
                         hidden_channels=args.hidden_channels,
                         out_channels=args.hidden_channels,
                         num_layers=args.num_layers,

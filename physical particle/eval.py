@@ -36,7 +36,7 @@ def eval_batch(model, loader, eval_func, device):
     res_list=[]
     for batch in loader:
         batch=batch.to(device)
-        out=model(batch)
+        out=model(batch.x, batch.edge_index, batch.n_nodes)
         # for binary classification, apply sigmoid
         out=torch.sigmoid(out)
         res=eval_func(out,batch.y.int()).item()
