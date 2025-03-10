@@ -18,7 +18,7 @@ This work is built upon [NodeFormer](https://github.com/qitianwu/NodeFormer) (Ne
 
 [2024.08.15] We add codes for heterophily graphs (chameleon, squirrel and actor). See the training script in `./node classification/run.sh`. 
 
-[2024.08.15] We extend the implementation for accommodating a batch of graphs as input, and add codes for particle physics datasets in `./physical particle`.
+[2024.08.15] We extend the implementation for accommodating a batch of graphs as input, which is the common case for graph-level predictive tasks. See codes for particle physics datasets in `./physical particle` and model implementation in `difformer_v2.py`.
 
 ## Model Overview
 
