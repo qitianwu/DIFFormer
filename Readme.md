@@ -100,7 +100,7 @@ One can download the trained models into `../model/` and run the scripts in `nod
 
 ### Citation
 
-If you find our codes useful, please consider citing our work
+If you find our codes useful, please cite our works. Thank you!
 
 ```bibtex
       @inproceedings{
@@ -110,4 +110,11 @@ If you find our codes useful, please consider citing our work
         booktitle={International Conference on Learning Representations (ICLR)},
         year={2023}
         }
+
+      @article{wu2024neural,
+  title={Neural Message Passing Induced by Energy-Constrained Diffusion},
+  author={Wu, Qitian and Wipf, David and Yan, Junchi},
+  journal={arXiv preprint arXiv:2409.09111},
+  year={2024}
+}
 ```
