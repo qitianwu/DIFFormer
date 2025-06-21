@@ -4,7 +4,7 @@ from difformer import *
 def parse_method(args, n, c, d, device):
     if args.method == 'difformer':
         model=DIFFormer(d,args.hidden_channels, c, num_layers=args.num_layers, alpha=args.alpha, dropout=args.dropout, num_heads=args.num_heads, kernel=args.kernel,
-                       use_bn=args.use_bn, use_residual=args.use_residual, use_graph=args.use_graph, use_weight=args.use_weight).to(device)
+                       use_bn=args.use_bn, use_residual=args.use_residual, use_graph=args.use_graph, use_weight=args.use_weight, use_source=args.use_source, graph_weight=args.graph_weight).to(device)
     else:
         raise ValueError('Invalid method')
     return model
@@ -49,8 +49,10 @@ def parser_add_main_args(parser):
     parser.add_argument('--use_residual', action='store_true', help='use residual link for each GNN layer')
     parser.add_argument('--use_graph', action='store_true', help='use pos emb')
     parser.add_argument('--use_weight', action='store_true', help='use weight for GNN convolution')
+    parser.add_argument('--use_source', action='store_true', help='use initial feature as source info')
     parser.add_argument('--kernel', type=str, default='simple', choices=['simple', 'sigmoid'])
-
+    parser.add_argument('--graph_weight', type=float, default=-1,
+                        help='Graph weight. -1 means add transformer part and GNN part directly.')
 
     # training
     parser.add_argument('--lr', type=float, default=0.01)

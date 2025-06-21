@@ -87,7 +87,9 @@ class DIFFormerConv(nn.Module):
                num_heads,
                kernel='simple',
                use_graph=True,
-               use_weight=True):
+               use_weight=True,
+               graph_weight=-1,
+               use_source=False):
         super(DIFFormerConv, self).__init__()
         self.Wk = nn.Linear(in_channels, out_channels * num_heads)
         self.Wq = nn.Linear(in_channels, out_channels * num_heads)
@@ -99,6 +101,8 @@ class DIFFormerConv(nn.Module):
         self.kernel = kernel
         self.use_graph = use_graph
         self.use_weight = use_weight
+        self.graph_weight = graph_weight
+        self.use_source = use_source
 
     def reset_parameters(self):
         self.Wk.reset_parameters()
@@ -106,7 +110,7 @@ class DIFFormerConv(nn.Module):
         if self.use_weight:
             self.Wv.reset_parameters()
 
-    def forward(self, query_input, source_input, edge_index=None, edge_weight=None, output_attn=False):
+    def forward(self, query_input, source_input, edge_index=None, edge_weight=None, x_0=None, output_attn=False):
         # feature transformation
         query = self.Wq(query_input).reshape(-1, self.num_heads, self.out_channels)
         key = self.Wk(source_input).reshape(-1, self.num_heads, self.out_channels)
@@ -123,10 +127,17 @@ class DIFFormerConv(nn.Module):
 
         # use input graph for gcn conv
         if self.use_graph:
-            final_output = attention_output + gcn_conv(value, edge_index, edge_weight)
+            if self.graph_weight > 0:
+                final_output = (1 - self.graph_weight) * attention_output \
+                               + self.graph_weight * gcn_conv(value, edge_index, edge_weight)
+            else:
+                final_output = attention_output + gcn_conv(value, edge_index, edge_weight)
         else:
             final_output = attention_output
         final_output = final_output.mean(dim=1)
+
+        if self.use_source:
+            final_output += x_0
 
         if output_attn:
             return final_output, attn
@@ -141,7 +152,7 @@ class DIFFormer(nn.Module):
     return y_hat predicted logits [N, C]
     '''
     def __init__(self, in_channels, hidden_channels, out_channels, num_layers=2, num_heads=1, kernel='simple',
-                 alpha=0.5, dropout=0.5, use_bn=True, use_residual=True, use_weight=True, use_graph=True):
+                 alpha=0.5, dropout=0.5, use_bn=True, use_residual=True, use_weight=True, use_graph=True, graph_weight=-1, use_source=False):
         super(DIFFormer, self).__init__()
 
         self.convs = nn.ModuleList()
@@ -151,7 +162,7 @@ class DIFFormer(nn.Module):
         self.bns.append(nn.LayerNorm(hidden_channels))
         for i in range(num_layers):
             self.convs.append(
-                DIFFormerConv(hidden_channels, hidden_channels, num_heads=num_heads, kernel=kernel, use_graph=use_graph, use_weight=use_weight))
+                DIFFormerConv(hidden_channels, hidden_channels, num_heads=num_heads, kernel=kernel, use_graph=use_graph, use_weight=use_weight, graph_weight=graph_weight, use_source=use_source))
             self.bns.append(nn.LayerNorm(hidden_channels))
 
         self.fcs.append(nn.Linear(hidden_channels, out_channels))
@@ -185,7 +196,7 @@ class DIFFormer(nn.Module):
 
         for i, conv in enumerate(self.convs):
             # graph convolution with DIFFormer layer
-            x = conv(x, x, edge_index, edge_weight)
+            x = conv(x, x, edge_index, edge_weight, layer_[0])
             if self.residual:
                 x = self.alpha * x + (1-self.alpha) * layer_[i]
             if self.use_bn:

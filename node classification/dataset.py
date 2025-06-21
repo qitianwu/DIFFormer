@@ -7,7 +7,7 @@ import scipy.io
 from sklearn.preprocessing import label_binarize
 import torch_geometric.transforms as T
 
-from data_utils import rand_train_test_idx, even_quantile_labels, to_sparse_tensor, dataset_drive_url, class_rand_splits
+from data_utils import rand_train_test_idx, even_quantile_labels, to_sparse_tensor, dataset_drive_url, class_rand_splits, normalize_feat
 
 from torch_geometric.datasets import Planetoid, Amazon, Coauthor
 from torch_geometric.transforms import NormalizeFeatures
@@ -119,8 +119,12 @@ def load_dataset(data_dir, dataname, sub_dataname=''):
         dataset = load_amazon_dataset(data_dir, dataname)
     elif dataname in  ('coauthor-cs', 'coauthor-physics'):
         dataset = load_coauthor_dataset(data_dir, dataname)
-    elif dataname in ('chameleon', 'cornell', 'film', 'squirrel', 'texas', 'wisconsin'):
+    elif dataname in ('cornell', 'film', 'texas', 'wisconsin'):
         dataset = load_geom_gcn_dataset(data_dir, dataname)
+    elif dataname in ('chameleon', 'squirrel'): # using new splits filtering the overlap nodes
+        dataset = load_wiki_new(data_dir, dataname)
+    elif dataname in ['roman-empire', 'amazon-ratings', 'minesweeper', 'tolokers', 'questions']:
+        dataset = load_heterophilous_graph(data_dir, dataname)
     else:
         raise ValueError('Invalid dataname')
     return dataset
@@ -551,3 +555,50 @@ def load_geom_gcn_dataset(data_dir, name):
 
     return dataset
 
+
+def load_wiki_new(data_dir, name, no_feat_norm=False):
+    path=os.path.join(data_dir, f'heterophilous_graph/{name}_filtered.npz')
+    data=np.load(path)
+    node_feat=data['node_features'] # unnormalized
+    labels=data['node_labels']
+    edges=data['edges'] #(E, 2)
+    edge_index=edges.T
+
+    if not no_feat_norm:
+        node_feat=normalize_feat(node_feat)
+
+    dataset = NCDataset(name)
+
+    edge_index=torch.as_tensor(edge_index)
+    node_feat=torch.as_tensor(node_feat)
+    labels=torch.as_tensor(labels)
+
+    dataset.graph = {'edge_index': edge_index,
+                     'node_feat': node_feat,
+                     'edge_feat': None,
+                     'num_nodes': node_feat.shape[0]}
+    dataset.label = labels
+
+    return dataset
+
+def load_heterophilous_graph(data_dir, name):
+    file_name=f'{name.replace("-", "_")}.npz'
+    path=os.path.join(data_dir, f'heterophilous_graph/{file_name}')
+    data=np.load(path)
+
+    node_feat = torch.tensor(data['node_features'])
+    labels = torch.tensor(data['node_labels'])
+    edges = torch.tensor(data['edges']) #(E,2)
+    edge_index=edges.t().contiguous()
+
+    dataset = NCDataset(name)
+
+    dataset.graph = {'edge_index': edge_index,
+                     'node_feat': node_feat,
+                     'edge_feat': None,
+                     'num_nodes': node_feat.shape[0]}
+    dataset.label = labels
+
+    print(f'labels: {labels.shape}')
+
+    return dataset
