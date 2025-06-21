@@ -20,6 +20,8 @@ This work is built upon [NodeFormer](https://github.com/qitianwu/NodeFormer) (Ne
 
 [2024.08.15] We extend the implementation for accommodating a batch of graphs as input, which is the common case for graph-level predictive tasks. See codes for particle physics datasets in `./physical particle` and model implementation in `./physical particle/difformer-v2.py`.
 
+[2025.06.20] The [extended paper](https://arxiv.org/pdf/2409.09111) is accepted to JMLR.
+
 ## Model Overview
 
 DIFFormer is motivated by an energy-constrained diffusion process which encodes a batch of instances to their structured representations. At each step, the model will first estimate pair-wise influence (i.e., attention) among arbitrary instance pairs (regardless of whether they connected by an input graph) and then update instance embeddings by feature propagation. The feed-forward process can be treated as a diffusion process that minimizes the global energy.
