@@ -115,7 +115,7 @@ If you find our codes useful, please cite our works. Thank you!
 ```
 ```bibtext
       @article{wu2025neural,
-        title={Neural Message Passing Induced by Energy-Constrained Diffusion},
+        title={Transformers from Diffusion: A Unified Framework for Neural Message Passing},
         author={Wu, Qitian and Wipf, David and Yan, Junchi},
         journal={Journal of Machine Learning Research (JMLR)},
         year={2025}
